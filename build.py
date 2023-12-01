@@ -100,7 +100,7 @@ Try:
             data=json.dumps(self.payload)
         )
 
-        if 200 <= response.status_code <= 299:: # TODO: #5 Fix this to check for all 200 codes, not just 201
+        if 200 <= response.status_code <= 299:
             print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{self.tag}'")
         else:
             print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}")
@@ -127,7 +127,7 @@ Try:
         response = requests.post(url, headers=headers, params=params, data=binary_data)
         response_json = json.loads(response.text)
 
-        if 200 <= response.status_code <= 299::
+        if 200 <= response.status_code <= 299:
             print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully added '{filename}' to release {self.tag}.")
         else:
             print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to add '{filename}' to {self.tag}: {response_json}")
