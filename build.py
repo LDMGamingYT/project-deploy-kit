@@ -31,7 +31,7 @@ if not args.no_bump:
     with open('package.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-# TODO: #3 Make building universal
+# TODO: #4 Make building universal
 os.system("vsce package")
 filename = f"frc-devtools-{version}.vsix"
 
