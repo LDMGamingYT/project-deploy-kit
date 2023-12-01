@@ -41,54 +41,52 @@ class Publisher:
         self.repo = repo
         self.prerelease = isPreRelease
 
-    def listRelease(self):
-        print("todo lmao")
+    def listRelease(self, release_body):
+        print (f"\nPreparing to create release on {self.owner}/{self.repo}\n")
+
+        with open("GH_TOKEN", 'r') as f:
+            token = f.read()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Token {token}'
+        }
+
+        tag = 'v' + version
+        payload = {
+            'name': tag,
+            'tag_name': tag,
+            'target_commitish': 'main',
+            'body': release_body,
+            'draft': False,
+            'prerelease': self.prerelease
+        }
+
+        print("Sending payload:", payload, '\n')
+
+        response = requests.post(
+            f'https://api.github.com/repos/{self.owner}/{self.repo}/releases',
+            headers=headers,
+            data=json.dumps(payload)
+        )
+
+        if response.status_code == 201:
+            print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{tag})')
+        else:
+            print(f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{tag})
+
+Try:
+- Checking if a release already exists with that tag
+- Make sure you're connected to the internet
+""")
+        exit(-1)
 
 if args.action == "publish":
     if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
     publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True)
 
-    print (f"\nPreparing to create release on {owner}/{repo}\n")
-
-    release_body = input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n")
-    print('\n')
-    with open("GH_TOKEN", 'r') as f:
-        token = f.read()
-
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Token {token}'
-    }
-
-    tag = 'v' + version
-    payload = {
-        'name': tag,
-        'tag_name': tag,
-        'target_commitish': 'main',
-        'body': release_body,
-        'draft': False,
-        'prerelease': prerelease
-    }
-
-    print("Sending payload:", payload, '\n')
-
-    response = requests.post(
-        f'https://api.github.com/repos/{owner}/{repo}/releases',
-        headers=headers,
-        data=json.dumps(payload)
-    )
-
-    if response.status_code == 201:
-        print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {tag} created successfully. (https://github.com/{owner}/{repo}/releases/tag/{tag})')
-    else:
-        print(f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{owner}/{repo}/releases/tag/{tag})
-              
-Try:
-- Checking if a release already exists with that tag
-- Make sure you're connected to the internet
-""")
-        exit(-1)
+    publisher.listRelease(input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"))
 
     url = f"https://api.github.com/repos/{owner}/{repo}/releases/{tag}/assets"
 
