@@ -36,44 +36,44 @@ os.system("vsce package")
 filename = f"frc-devtools-{version}.vsix"
 
 class Publisher:
-    def __init__(self, owner, repo, isPreRelease):
+    def __init__(self, owner, repo, isPreRelease, version, release_body):
         self.owner = owner
         self.repo = repo
         self.prerelease = isPreRelease
+        self.tag = 'v' + version
 
-    def listRelease(self, release_body):
-        print (f"\nPreparing to create release on {self.owner}/{self.repo}\n")
-
-        with open("GH_TOKEN", 'r') as f:
-            token = f.read()
-
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Token {token}'
-        }
-
-        tag = 'v' + version
-        payload = {
-            'name': tag,
-            'tag_name': tag,
+        self.payload = {
+            'name': self.tag,
+            'tag_name': self.tag,
             'target_commitish': 'main',
             'body': release_body,
             'draft': False,
             'prerelease': self.prerelease
         }
 
-        print("Sending payload:", payload, '\n')
+        with open("GH_TOKEN", 'r') as f:
+            self.token = f.read()
+
+    def listRelease(self):
+        print (f"\nPreparing to create release on {self.owner}/{self.repo}\n")
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Token {self.token}'
+        }
+
+        print("Sending payload:", self.payload, '\n')
 
         response = requests.post(
             f'https://api.github.com/repos/{self.owner}/{self.repo}/releases',
             headers=headers,
-            data=json.dumps(payload)
+            data=json.dumps(self.payload)
         )
 
         if response.status_code == 201:
-            print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{tag})')
+            print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {self.tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})')
         else:
-            print(f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{tag})
+            print(f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})
 
 Try:
 - Checking if a release already exists with that tag
@@ -81,56 +81,57 @@ Try:
 """)
         exit(-1)
 
+    def addReleaseAsset(self):
+        url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
+
+        print (f"\nAttempting to add {filename} to {self.tag}")
+
+        with open(filename, 'rb') as file:
+            binary_data = file.read()
+        binary_data = base64.b64encode(binary_data)
+        print(f"\n{Back.GREEN}{Fore.BLACK} OK {Style.RESET_ALL} File encoded successfully\n")
+
+        headers = {
+            'Authorization': f'Token {self.token}',
+            'Content-Type': 'application/octet-stream',
+        }
+
+        params = {
+            'name': filename
+        }
+
+        response = requests.post(url, headers=headers, params=params, data=binary_data)
+        response_json = json.loads(response.text)
+
+        if response.status_code == 201:
+            print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully added '{filename}' to release {self.tag}.")
+        else:
+            print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to add '{filename}' to {self.tag}: {response_json}")
+            print(f"\nAutomatically deleting release {self.tag}, as adding release asset failed\n")
+
+            release_id_response = requests.get(
+                    f'https://api.github.com/repos/{self.owner}/{self.repo}/releases/tags/{self.tag}',
+                    headers = {
+                        'Authorization': f'Token {self.token}',
+                    },  
+                )
+
+            response = requests.delete(
+                release_id_response.json()['url'],
+                headers = {
+                    'Authorization': f'Token {self.token}',
+                },
+                data=json.dumps(self.payload)
+            )
+
+            if response.status_code == 201: # TODO: #5 Fix this to check for all 200 codes, not just 201
+                print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{self.tag}'")
+            else:
+                print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}")
+
 if args.action == "publish":
     if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
-    publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True)
-
-    publisher.listRelease(input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"))
-
-    url = f"https://api.github.com/repos/{owner}/{repo}/releases/{tag}/assets"
-
-    print (f"\nAttempting to add {filename} to {tag}")
-
-    with open(filename, 'rb') as file:
-        binary_data = file.read()
-    binary_data = base64.b64encode(binary_data)
-    print(f"\n{Back.GREEN}{Fore.BLACK} OK {Style.RESET_ALL} File encoded successfully\n")
-
-    headers = {
-        'Authorization': f'Token {token}',
-        'Content-Type': 'application/octet-stream',
-    }
-
-    params = {
-        'name': filename
-    }
-
-    response = requests.post(url, headers=headers, params=params, data=binary_data)
-    response_json = json.loads(response.text)
-
-    if response.status_code == 201:
-        print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully added '{filename}' to release {tag}.")
-    else:
-        print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to add '{filename}' to {tag}: {response_json}")
-        print(f"\nAutomatically deleting release {tag}, as adding release asset failed\n")
-
-        release_id_response = requests.get(
-                f'https://api.github.com/repos/{owner}/{repo}/releases/tags/{tag}',
-                headers = {
-                    'Authorization': f'Token {token}',
-                },  
-            )
-
-        response = requests.delete(
-            release_id_response.json()['url'],
-            headers = {
-                'Authorization': f'Token {token}',
-            },
-            data=json.dumps(payload)
-        )
-
-        if response.status_code == 201: # TODO: #5 Fix this to check for all 200 codes, not just 201
-            print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{tag}'")
-        else:
-            print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{tag}'. Delete it manually at https://github.com/{owner}/{repo}/releases/tag/{tag}")
+    publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, version, input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"))
+    publisher.listRelease()
+    publisher.addReleaseAsset()
