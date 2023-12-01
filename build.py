@@ -73,12 +73,14 @@ class Publisher:
         if response.status_code == 201:
             print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {self.tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})')
         else:
-            print(f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})
+            print(
+f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})
 
 Try:
 - Checking if a release already exists with that tag
 - Make sure you're connected to the internet
-""")
+"""
+            )
         exit(-1)
 
     def addReleaseAsset(self):
