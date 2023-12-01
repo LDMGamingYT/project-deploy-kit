@@ -54,7 +54,7 @@ class Publisher:
         with open("GH_TOKEN", 'r') as f:
             self.token = f.read()
 
-    def listRelease(self):
+    def list_release(self):
         print (f"\nPreparing to create release on {self.owner}/{self.repo}\n")
 
         headers = {
@@ -83,7 +83,7 @@ Try:
             )
         exit(-1)
 
-    def addReleaseAsset(self):
+    def add_release_asset(self):
         url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
 
         print (f"\nAttempting to add {filename} to {self.tag}")
@@ -135,5 +135,5 @@ if args.action == "publish":
     if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
     publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, version, input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"))
-    publisher.listRelease()
-    publisher.addReleaseAsset()
+    publisher.list_release()
+    publisher.add_release_asset()
