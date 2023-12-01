@@ -14,6 +14,7 @@ branch = "-DEV"
 
 # TODO: #10 Make this more object-oriented
 
+# TODO: #3 Move this main stuff to actual proper main() function thing
 parser = argparse.ArgumentParser()
 parser.add_argument('action', nargs='?', default='build-only', choices=['build-only', 'publish'], help='action to perform')
 parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
@@ -29,7 +30,8 @@ if not args.no_bump:
 
     with open('package.json', 'w') as f:
         json.dump(data, f, indent=4)
-    
+
+# TODO: #3 Make building universal
 os.system("vsce package")
 filename = f"frc-devtools-{version}.vsix"
 
@@ -130,7 +132,7 @@ Try:
             data=json.dumps(payload)
         )
 
-        if response.status_code == 201: # TODO: Fix this to check for all 200 codes, not just 201
+        if response.status_code == 201: # TODO: #5 Fix this to check for all 200 codes, not just 201
             print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{tag}'")
         else:
             print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{tag}'. Delete it manually at https://github.com/{owner}/{repo}/releases/tag/{tag}")
