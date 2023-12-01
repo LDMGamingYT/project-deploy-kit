@@ -91,6 +91,7 @@ Try:
             },  
         ).json()['url']
 
+    # TODO: #2 Make buildscript properly delete tags    
     def delete_release(self):
         response = requests.delete(
             self.get_release_id_url(),
