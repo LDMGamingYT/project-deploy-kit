@@ -1,0 +1,5 @@
+{
+    "displayName": "Test package",
+    "description": "Used to test build.py and allow it to bump patch version",
+    "version": "v0.1.0-alpha"
+}
