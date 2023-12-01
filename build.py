@@ -83,6 +83,28 @@ Try:
             )
         exit(-1)
 
+    def get_release_id_url(self):
+        return requests.get(
+            f'https://api.github.com/repos/{self.owner}/{self.repo}/releases/tags/{self.tag}',
+            headers = {
+                'Authorization': f'Token {self.token}',
+            },  
+        ).json()['url']
+
+    def delete_release(self):
+        response = requests.delete(
+            self.get_release_id_url(),
+            headers = {
+                'Authorization': f'Token {self.token}',
+            },
+            data=json.dumps(self.payload)
+        )
+
+        if response.status_code == 201: # TODO: #5 Fix this to check for all 200 codes, not just 201
+            print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{self.tag}'")
+        else:
+            print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}")
+
     def add_release_asset(self):
         url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
 
@@ -111,25 +133,7 @@ Try:
             print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to add '{filename}' to {self.tag}: {response_json}")
             print(f"\nAutomatically deleting release {self.tag}, as adding release asset failed\n")
 
-            release_id_response = requests.get(
-                    f'https://api.github.com/repos/{self.owner}/{self.repo}/releases/tags/{self.tag}',
-                    headers = {
-                        'Authorization': f'Token {self.token}',
-                    },  
-                )
-
-            response = requests.delete(
-                release_id_response.json()['url'],
-                headers = {
-                    'Authorization': f'Token {self.token}',
-                },
-                data=json.dumps(self.payload)
-            )
-
-            if response.status_code == 201: # TODO: #5 Fix this to check for all 200 codes, not just 201
-                print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{self.tag}'")
-            else:
-                print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}")
+            self.delete_release()
 
 if args.action == "publish":
     if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
