@@ -35,6 +35,24 @@ if not args.no_bump:
 os.system("vsce package")
 filename = f"frc-devtools-{version}.vsix"
 
+class Logger:
+    @staticmethod
+    def log(color: Back, type: str, message: str):
+        print(f"{color}{Fore.BLACK} {type} {Style.RESET_ALL} {message}")
+
+    @staticmethod
+    def err(message: str, aux_info: str = None):
+        Logger.log(Back.RED, "ERROR" if aux_info == None else "ERROR - " + aux_info, message)
+
+    @staticmethod
+    def done(message: str, aux_info: str = None):
+        Logger.log(Back.GREEN, "DONE" if aux_info == None else "DONE - " + aux_info, message)
+
+    @staticmethod
+    def ok(message: str, aux_info: str = None):
+        Logger.log(Back.GREEN, "OK" if aux_info == None else "OK - " + aux_info, message)
+
+
 class Publisher:
     def __init__(self, owner, repo, isPreRelease, version, release_body):
         self.owner = owner
