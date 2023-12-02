@@ -1,6 +1,3 @@
-# Buildscript for extension
-# Packages extension into VSIX using vsce
-
 import os
 import json
 import semver
