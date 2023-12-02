@@ -20,20 +20,24 @@ parser.add_argument('action', nargs='?', default='build-only', choices=['build-o
 parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
 args = parser.parse_args()
 
-with open('package.json') as f:
-    data = json.load(f)
+class Builder:
+    def __init__(self, build_command) -> None:
+        self.cmd = build_command
 
-version = data['version']
+        with open('package.json') as f:
+            self.package = json.load(f)
 
-if not args.no_bump:
-    data['version'] = semver.bump_patch(version) + branch
+        self.version = self.package['version']
 
-    with open('package.json', 'w') as f:
-        json.dump(data, f, indent=4)
+    def bump_patch(self):
+        if not args.no_bump:
+            self.package['version'] = semver.bump_patch(self.version) + branch
 
-# TODO: #4 Make building universal
-os.system("vsce package")
-filename = f"frc-devtools-{version}.vsix"
+            with open('package.json', 'w') as f:
+                json.dump(self.package, f, indent=4)
+
+    def build(self):
+        os.system(self.cmd)
 
 class Logger:
     @staticmethod
@@ -52,13 +56,13 @@ class Logger:
     def ok(message: str, response_code: int = None):
         Logger.log(Back.GREEN, "OK" if response_code == None else "OK - HTTP " + str(response_code), message)
 
-
 class Publisher:
-    def __init__(self, owner, repo, isPreRelease, version, release_body):
+    def __init__(self, owner, repo, isPreRelease, version, release_body, filename):
         self.owner = owner
         self.repo = repo
         self.prerelease = isPreRelease
         self.tag = 'v' + version
+        self.filename = filename
 
         self.payload = {
             'name': self.tag,
@@ -126,9 +130,9 @@ Try:
     def add_release_asset(self):
         url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
 
-        print (f"\nAttempting to add {filename} to {self.tag}")
+        print (f"\nAttempting to add {self.filename} to {self.tag}")
 
-        with open(filename, 'rb') as file:
+        with open(self.filename, 'rb') as file:
             binary_data = file.read()
         binary_data = base64.b64encode(binary_data)
         Logger.ok("\nFile encoded successfully\n")
@@ -139,23 +143,30 @@ Try:
         }
 
         params = {
-            'name': filename
+            'name': self.filename
         }
 
         response = requests.post(url, headers=headers, params=params, data=binary_data)
         response_json = json.loads(response.text)
 
         if 200 <= response.status_code <= 299:
-            Logger.done(f"Successfully added '{filename}' to release {self.tag}.", response.status_code)
+            Logger.done(f"Successfully added '{self.filename}' to release {self.tag}.", response.status_code)
         else:
-            Logger.err(f"Failed to add '{filename}' to {self.tag}: {response_json}", response.status_code)
+            Logger.err(f"Failed to add '{self.filename}' to {self.tag}: {response_json}", response.status_code)
             print(f"\nAutomatically deleting release {self.tag}, as adding release asset failed\n")
 
             self.delete_release()
 
-if args.action == "publish":
-    if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
+def main():
+    builder = Builder("vsce package")
+    builder.build()
 
-    publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, version, input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"))
-    publisher.list_release()
-    publisher.add_release_asset()
+    if args.action == "publish":
+        if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
+
+        publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, builder.version, 
+                              input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"frc-devtools-{builder.version}.vsix")
+        publisher.list_release()
+        publisher.add_release_asset()
+
+if __name__ == "__main__": main()
