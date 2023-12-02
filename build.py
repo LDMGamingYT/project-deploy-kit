@@ -73,7 +73,7 @@ class Publisher:
             self.token = f.read()
 
     def list_release(self):
-        print (f"\nPreparing to create release on {self.owner}/{self.repo}\n")
+        print(f"\nPreparing to create release on {self.owner}/{self.repo}\n")
 
         headers = {
             'Content-Type': 'application/json',
@@ -89,16 +89,15 @@ class Publisher:
         )
 
         if 200 <= response.status_code <= 299:
-            print(f'{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Release {self.tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})')
+            Logger.done(f'Release {self.tag} created successfully. (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})', "HTTP + " + response.status_code)
         else:
-            print(
-f"""{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})
+            Logger.err(
+f"""Failed to create release. Response: {response.text} (https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag})
 
 Try:
 - Checking if a release already exists with that tag
 - Make sure you're connected to the internet
-"""
-            )
+""", "HTTP " + response.status_code)
         exit(-1)
 
     def get_release_id_url(self):
@@ -120,9 +119,9 @@ Try:
         )
 
         if 200 <= response.status_code <= 299:
-            print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully deleted release '{self.tag}'")
+            Logger.done(f"Successfully deleted release '{self.tag}'", "HTTP " + response.status_code)
         else:
-            print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}")
+            Logger.err(f"Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}", "HTTP " + response.status_code)
 
     def add_release_asset(self):
         url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
@@ -132,7 +131,7 @@ Try:
         with open(filename, 'rb') as file:
             binary_data = file.read()
         binary_data = base64.b64encode(binary_data)
-        print(f"\n{Back.GREEN}{Fore.BLACK} OK {Style.RESET_ALL} File encoded successfully\n")
+        Logger.ok("\nFile encoded successfully\n")
 
         headers = {
             'Authorization': f'Token {self.token}',
@@ -147,9 +146,9 @@ Try:
         response_json = json.loads(response.text)
 
         if 200 <= response.status_code <= 299:
-            print(f"{Back.GREEN}{Fore.BLACK} DONE {Style.RESET_ALL} Successfully added '{filename}' to release {self.tag}.")
+            Logger.done(f"Successfully added '{filename}' to release {self.tag}.", "HTTP " + response.status_code)
         else:
-            print(f"{Back.RED}{Fore.BLACK} ERROR HTTP {response.status_code} {Style.RESET_ALL} Failed to add '{filename}' to {self.tag}: {response_json}")
+            Logger.err(f"Failed to add '{filename}' to {self.tag}: {response_json}", "HTTP " + response.status_code)
             print(f"\nAutomatically deleting release {self.tag}, as adding release asset failed\n")
 
             self.delete_release()
