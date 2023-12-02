@@ -158,7 +158,7 @@ def main():
     builder.build()
 
     if args.action == "publish":
-        if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
+        if input("\nThis will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
         publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, builder.version, 
                               input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"debugbin-{builder.version}.txt")
