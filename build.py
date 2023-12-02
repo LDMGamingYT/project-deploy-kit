@@ -20,11 +20,10 @@ class Builder:
         self.version = self.package['version']
 
     def bump_patch(self):
-        if not args.no_bump:
-            self.package['version'] = semver.bump_patch(self.version) + self.branch
+        self.package['version'] = semver.bump_patch(self.version) + self.branch
 
-            with open('package.json', 'w') as f:
-                json.dump(self.package, f, indent=4)
+        with open('package.json', 'w') as f:
+            json.dump(self.package, f, indent=4)
 
     def build(self):
         os.system(self.cmd)
@@ -154,7 +153,8 @@ def main():
     args = parser.parse_args()
 
     builder = Builder("vsce package", "-TEST")
-    builder.bump_patch()
+    if not args.no_bump:
+        builder.bump_patch()
     builder.build()
 
     if args.action == "publish":
