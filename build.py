@@ -152,7 +152,7 @@ def main():
     parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
     args = parser.parse_args()
 
-    builder = Builder("vsce package", "-TEST")
+    builder = Builder("echo Building successful! \(nothing happened, this is an echo statement\)", "-TEST")
     if not args.no_bump:
         builder.bump_patch()
     builder.build()
@@ -161,7 +161,7 @@ def main():
         if input("This will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
         publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, builder.version, 
-                              input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"frc-devtools-{builder.version}.vsix")
+                              input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"debugbin-{builder.version}.txt")
         publisher.list_release()
         publisher.add_release_asset()
 
