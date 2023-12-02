@@ -41,16 +41,16 @@ class Logger:
         print(f"{color}{Fore.BLACK} {type} {Style.RESET_ALL} {message}")
 
     @staticmethod
-    def err(message: str, aux_info: str = None):
-        Logger.log(Back.RED, "ERROR" if aux_info == None else "ERROR - " + aux_info, message)
+    def err(message: str, response_code: int = None):
+        Logger.log(Back.RED, "ERROR" if response_code == None else "ERROR - HTTP " + str(response_code), message)
 
     @staticmethod
-    def done(message: str, aux_info: str = None):
-        Logger.log(Back.GREEN, "DONE" if aux_info == None else "DONE - " + aux_info, message)
+    def done(message: str, response_code: int = None):
+        Logger.log(Back.GREEN, "DONE" if response_code == None else "DONE - HTTP " + str(response_code), message)
 
     @staticmethod
-    def ok(message: str, aux_info: str = None):
-        Logger.log(Back.GREEN, "OK" if aux_info == None else "OK - " + aux_info, message)
+    def ok(message: str, response_code: int = None):
+        Logger.log(Back.GREEN, "OK" if response_code == None else "OK - HTTP " + str(response_code), message)
 
 
 class Publisher:
@@ -97,7 +97,7 @@ f"""Failed to create release. Response: {response.text} (https://github.com/{sel
 Try:
 - Checking if a release already exists with that tag
 - Make sure you're connected to the internet
-""", "HTTP " + response.status_code)
+""", response.status_code)
         exit(-1)
 
     def get_release_id_url(self):
@@ -119,9 +119,9 @@ Try:
         )
 
         if 200 <= response.status_code <= 299:
-            Logger.done(f"Successfully deleted release '{self.tag}'", "HTTP " + response.status_code)
+            Logger.done(f"Successfully deleted release '{self.tag}'", response.status_code)
         else:
-            Logger.err(f"Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}", "HTTP " + response.status_code)
+            Logger.err(f"Failed to delete release '{self.tag}'. Delete it manually at https://github.com/{self.owner}/{self.repo}/releases/tag/{self.tag}", response.status_code)
 
     def add_release_asset(self):
         url = f"https://api.github.com/repos/{self.owner}/{self.repo}/releases/{self.tag}/assets"
@@ -146,9 +146,9 @@ Try:
         response_json = json.loads(response.text)
 
         if 200 <= response.status_code <= 299:
-            Logger.done(f"Successfully added '{filename}' to release {self.tag}.", "HTTP " + response.status_code)
+            Logger.done(f"Successfully added '{filename}' to release {self.tag}.", response.status_code)
         else:
-            Logger.err(f"Failed to add '{filename}' to {self.tag}: {response_json}", "HTTP " + response.status_code)
+            Logger.err(f"Failed to add '{filename}' to {self.tag}: {response_json}", response.status_code)
             print(f"\nAutomatically deleting release {self.tag}, as adding release asset failed\n")
 
             self.delete_release()
