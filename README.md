@@ -25,4 +25,4 @@ By default, PDK is run in `build-only` mode. For publishing, run in `publish` mo
 
 ### Project Settings
 
-Set project settings in `pdk.properties`, see this repo for an example of how that should look.
+Set project settings in `pdk.json`, see this repo for an example of how that should look.
