@@ -12,14 +12,6 @@ import base64
 # This is the hard-coded branch, change whenever applicable
 branch = "-DEV"
 
-# TODO: #10 Make this more object-oriented
-
-# TODO: #3 Move this main stuff to actual proper main() function thing
-parser = argparse.ArgumentParser()
-parser.add_argument('action', nargs='?', default='build-only', choices=['build-only', 'publish'], help='action to perform')
-parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
-args = parser.parse_args()
-
 class Builder:
     def __init__(self, build_command) -> None:
         self.cmd = build_command
@@ -158,7 +150,13 @@ Try:
             self.delete_release()
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('action', nargs='?', default='build-only', choices=['build-only', 'publish'], help='action to perform')
+    parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
+    args = parser.parse_args()
+
     builder = Builder("vsce package")
+    builder.bump_patch()
     builder.build()
 
     if args.action == "publish":
