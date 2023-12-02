@@ -1,3 +1,4 @@
 {
-
+    "name": "Test project",
+    "build_command": "echo Building successful! (nothing happened, this is an echo statement)"
 }
