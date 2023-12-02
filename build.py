@@ -161,7 +161,7 @@ def main():
         if input("\nThis will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
         publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, builder.version, 
-                              input(f"{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"debugbin-{builder.version}.txt")
+                              input(f"\n{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"debugbin-{builder.version}.txt")
         publisher.list_release()
         publisher.add_release_asset()
 
