@@ -1,3 +1,6 @@
+# Copyright (c) 2023 Logan Dhillon
+# License: MIT; See LICENSE for more
+
 import os
 import json
 import semver
