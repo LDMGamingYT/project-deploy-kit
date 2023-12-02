@@ -9,12 +9,10 @@ import requests
 from colorama import Fore, Back, Style
 import base64
 
-# This is the hard-coded branch, change whenever applicable
-branch = "-DEV"
-
 class Builder:
-    def __init__(self, build_command) -> None:
+    def __init__(self, build_command, branch) -> None:
         self.cmd = build_command
+        self.branch = branch
 
         with open('package.json') as f:
             self.package = json.load(f)
@@ -23,7 +21,7 @@ class Builder:
 
     def bump_patch(self):
         if not args.no_bump:
-            self.package['version'] = semver.bump_patch(self.version) + branch
+            self.package['version'] = semver.bump_patch(self.version) + self.branch
 
             with open('package.json', 'w') as f:
                 json.dump(self.package, f, indent=4)
@@ -155,7 +153,7 @@ def main():
     parser.add_argument("-n", "--no-bump", action="store_true", help="build the extension without bumping patch version")
     args = parser.parse_args()
 
-    builder = Builder("vsce package")
+    builder = Builder("vsce package", "-TEST")
     builder.bump_patch()
     builder.build()
 
