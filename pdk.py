@@ -61,12 +61,13 @@ class Logger:
         Logger.log(Back.GREEN, "OK" if response_code == None else "OK - HTTP " + str(response_code), message)
 
 class Publisher:
-    def __init__(self, owner, repo, isPreRelease, version, release_body, filename):
+    def __init__(self, owner, repo, isPreRelease, version, release_body, filename, token):
         self.owner = owner
         self.repo = repo
         self.prerelease = isPreRelease
         self.tag = 'v' + version
         self.filename = filename
+        self.token = token
 
         self.payload = {
             'name': self.tag,
@@ -76,9 +77,6 @@ class Publisher:
             'draft': False,
             'prerelease': self.prerelease
         }
-
-        with open("GH_TOKEN", 'r') as f:
-            self.token = f.read()
 
     def list_release(self):
         print(f"\nPreparing to create release on {self.owner}/{self.repo}\n")
@@ -173,10 +171,25 @@ def main():
     builder.build()
 
     if args.action == "publish":
+        if not os.path.isfile("GK_TOKEN"):
+            Logger.err("Could not find GitHub token! Make sure a file exists called \"GH_TOKEN\", containing your GitHub token in plain-text. It is highly recommended to add this file to your .gitignore, if using version control.")
+            exit(-1)
+
         if input("\nThis will create a release from main and publish it immediately, proceed? (Y/n) ") == 'n': exit(0)
 
-        publisher = Publisher("LDMGamingYT", "FRC-Development-Tools", True, builder.version, 
-                              input(f"\n{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), f"debugbin-{builder.version}.txt")
+        with open("GH_TOKEN", 'r') as f:
+            token = f.read()
+
+        publisher = Publisher(
+            "LDMGamingYT", 
+            "FRC-Development-Tools", 
+            True, 
+            builder.version, 
+            input(f"\n{Style.BRIGHT}Release body? (Markdown is supported){Style.RESET_ALL}\n"), 
+            f"debugbin-{builder.version}.txt",
+            token
+        )
+
         publisher.list_release()
         publisher.add_release_asset()
 
