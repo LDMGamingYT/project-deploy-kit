@@ -1,5 +1,14 @@
 {
     "displayName": "Test package",
     "description": "Used to test build.py and allow it to bump patch version",
-    "version": "0.1.0-TEST"
+    "version": "0.1.0-TEST",
+    "pdk": {
+        "commands": {
+            "build": "echo Building successful! (nothing happened, this is an echo statement)"
+        },
+        "defaults": {
+            "action": "publish",
+            "no_bump": true
+        }
+    }
 }
